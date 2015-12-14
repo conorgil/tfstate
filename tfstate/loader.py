@@ -58,7 +58,7 @@ class TerraformLoader(object):
                                        module=module)
         else:
             # FIXME... seriously...
-            raise Exception("Unhandled state uri type.. sorry")
+            raise Exception("Unhandled state uri type in %s.. sorry" % self._state_uri)
 
     def _load_s3_state(self, bucket, path, module=None):
         # Configure the remote state in the state uri's cache directory so that
