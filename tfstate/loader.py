@@ -85,25 +85,20 @@ class TerraformLoader(object):
             ]
 
             try:
-                self._call(command, cwd=self._state_uri_cache_dir,
-                                        env=env)
-            except subprocess.CalledProcessError, e:
+                self._call(command, cwd=self._state_uri_cache_dir, env=env)
+            except subprocess.CalledProcessError:
                 raise Exception('Failed to setup remote configuration')
-
-        output_cache_file = os.path.join(self._state_uri_cache_dir, 'root.json')
-
-        if module:
-            output_cache_file = os.path.join(self._state_uri_cache_dir,
-                                             '%s.json' % module)
 
         return self._get_terraform_output(
             module=module,
             env=env,
-            cache_file=output_cache_file
         )
 
     def _load_file_state(self, path, module=None):
-        pass
+        return self._get_terraform_output(
+            state=path,
+            module=module,
+        )
 
     def _get_output_cache(self, cache_file):
         if not os.path.exists(cache_file):
@@ -130,15 +125,16 @@ class TerraformLoader(object):
 
         return subprocess_cmd(command, env=exec_env, **kwargs)
 
+    def _get_terraform_output(self, state=None, module=None, env=None):
+        output_cache_file = os.path.join(self._state_uri_cache_dir, 'root.json')
 
-    def _get_terraform_output(self, state=None, module=None, env=None,
-                              cache_file=None):
-        if cache_file:
-            output = self._get_output_cache(cache_file)
+        if module:
+            output_cache_file = os.path.join(self._state_uri_cache_dir,
+                                             '%s.json' % module)
+        output = self._get_output_cache(output_cache_file)
 
-            if output:
-                return output
-
+        if output:
+            return output
 
         command = [
             self._terraform_bin_path, 'output'
@@ -157,7 +153,7 @@ class TerraformLoader(object):
             raise
 
         output = self._parse_terraform_output(raw_output)
-        self._save_output_cache(cache_file, output)
+        self._save_output_cache(output_cache_file, output)
         return output
 
     def _parse_terraform_output(self, terraform_output):
