@@ -137,7 +137,7 @@ class TerraformLoader(object):
             return output
 
         command = [
-            self._terraform_bin_path, 'output'
+            self._terraform_bin_path, 'output', '-json'
         ]
 
         if state:
@@ -159,13 +159,11 @@ class TerraformLoader(object):
     def _parse_terraform_output(self, terraform_output):
         output = {}
 
-        for line in terraform_output.split('\n'):
-            line_match = OUTPUT_REGEX.match(line)
-
-            # Realistically this shouldn't happen... something is probably wrong
-            # if it does
-            if not line_match:
-                continue
-            output[line_match.group('key')] = line_match.group('value')
+        for key, obj in output.iteritems():
+        value = obj['value']
+        if type(value) == list:
+            output_dict[key] = ','.join(value)
+        else:
+            output_dict[key] = value
 
         return output
